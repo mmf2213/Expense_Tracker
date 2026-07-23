@@ -19,7 +19,7 @@ PAYMENT_MODES = ["Cash", "UPI", "Credit Card", "Debit Card", "Net Banking"]
 
 # Sidebar: Monthly Income Input & Add Expense Form
 st.sidebar.header("📊 Income Settings")
-monthly_income = st.sidebar.number_input("Enter Monthly Income (₹)", min_value=0.0, value=50000.0, step=1000.0)
+monthly_income = st.sidebar.number_input("Enter Monthly Income (₹)", min_value=0.0, value=10000.0, step=1000.0)
 
 st.sidebar.markdown("---")
 st.sidebar.header("➕ Add New Expense")
