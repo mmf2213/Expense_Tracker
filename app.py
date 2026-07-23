@@ -31,18 +31,18 @@ monthly_income = st.sidebar.number_input(
 )
 st.session_state.monthly_income = monthly_income
 
-# Category Budget Limits (Added Rent)
+# Category Budget Limits (Updated Categories)
 st.sidebar.subheader("🎯 Category Budgets")
 categories = ["Food", "Rent", "Transport", "Shopping", "Bills"]
 
 if 'category_budgets' not in st.session_state:
     st.session_state.category_budgets = {
-      "Rent": 4500.0,
-      "Food": 3000.0,
-      "Transport": 500.0,
-      "Shopping": 1000.0,
-      "Bills" : 1000.0
-}
+        "Rent": 4500.0,
+        "Food": 3000.0,
+        "Transport": 500.0,
+        "Shopping": 1000.0,
+        "Bills": 1000.0
+    }
 
 with st.sidebar.expander("Set Category Limits (₹)"):
     for cat in categories:
@@ -124,7 +124,12 @@ budget_used_pct = (total_expense / monthly_income * 100) if monthly_income > 0 e
 col1, col2, col3 = st.columns(3)
 col1.metric("Monthly Income", f"₹{monthly_income:,.2f}")
 col2.metric("Total Expense", f"₹{total_expense:,.2f}")
-col3.metric("Net Savings", f"₹{net_savings:,.2f}", delta=f"{100 - budget_used_pct:.1f}% remaining")
+col3.metric(
+    "Net Savings", 
+    f"₹{net_savings:,.2f}", 
+    delta=f"{100 - budget_used_pct:.1f}% remaining",
+    delta_color="normal" if net_savings >= 0 else "inverse"
+)
 
 # Budget Overall Progress Bar
 if monthly_income > 0:
@@ -156,7 +161,6 @@ with st.expander("➕ Add New Expense", expanded=True):
             category = st.selectbox("Category", categories)
             amount = st.number_input("Amount (₹)", min_value=0.01, step=10.0)
         with col2:
-            # Payment Modes updated (removed Credit Card and Net Banking)
             payment_mode = st.selectbox("Payment Mode", ["Cash", "UPI", "Debit Card"])
             note = st.text_input("Note (Optional)")
         
@@ -182,6 +186,9 @@ if not filtered_df.empty:
 
     with col_table:
         display_cols = [c for c in ['id', 'date', 'category', 'amount', 'payment_mode', 'note'] if c in filtered_df.columns]
-        st.dataframe(filtered_df[display_cols], use_container_width=True)
+        table_df = filtered_df[display_cols].copy()
+        if 'date' in table_df.columns:
+            table_df['date'] = table_df['date'].dt.strftime('%Y-%m-%d')
+        st.dataframe(table_df, use_container_width=True)
 else:
     st.info("No expenses logged yet.")
