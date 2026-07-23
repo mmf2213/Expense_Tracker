@@ -88,6 +88,18 @@ if not df.empty:
 # ==========================================
 # 2. MAIN PAGE: Add Expense, Metrics & Table
 # ==========================================
+
+# Metrics Summary Cards
+total_expense = filtered_df['amount'].sum() if not filtered_df.empty else 0.0
+net_savings = monthly_income - total_expense
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Monthly Income", f"₹{monthly_income:,.2f}")
+col2.metric("Total Expense", f"₹{total_expense:,.2f}")
+col3.metric("Net Savings", f"₹{net_savings:,.2f}")
+
+st.markdown("---")
+
 st.title("💰 Personal Expense Tracker")
 
 # Add New Expense Form
