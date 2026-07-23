@@ -31,19 +31,18 @@ monthly_income = st.sidebar.number_input(
 )
 st.session_state.monthly_income = monthly_income
 
-# Category Budget Limits (NEW FEATURE)
+# Category Budget Limits (Added Rent)
 st.sidebar.subheader("🎯 Category Budgets")
-categories = ["Food", "Transport", "Shopping", "Bills", "Entertainment", "Other"]
+categories = ["Food", "Rent", "Transport", "Shopping", "Bills", "Entertainment", "Other"]
 
 if 'category_budgets' not in st.session_state:
     st.session_state.category_budgets = {
-        "Food": 3000.0,
-        "Transport": 1500.0,
-        "Shopping": 2000.0,
-        "Bills": 2000.0,
-        "Entertainment": 1000.0,
-        "Other": 1000.0
-    }
+      "Rent": 4500.0,
+      "Food": 3000.0,
+      "Transport": 500.0,
+      "Shopping": 1000.0,
+      "Bills" : 1000.0
+}
 
 with st.sidebar.expander("Set Category Limits (₹)"):
     for cat in categories:
@@ -134,7 +133,7 @@ if monthly_income > 0:
     if budget_used_pct > 90:
         st.error("⚠️ Warning: You have spent over 90% of your total monthly income!")
 
-# Category Spending Alert System (NEW FEATURE)
+# Category Spending Alert System
 if not filtered_df.empty:
     cat_spent = filtered_df.groupby("category")["amount"].sum().to_dict()
     overbudget_alerts = []
@@ -157,7 +156,8 @@ with st.expander("➕ Add New Expense", expanded=True):
             category = st.selectbox("Category", categories)
             amount = st.number_input("Amount (₹)", min_value=0.01, step=10.0)
         with col2:
-            payment_mode = st.selectbox("Payment Mode", ["Cash", "UPI", "Credit Card", "Debit Card", "Net Banking"])
+            # Payment Modes updated (removed Credit Card and Net Banking)
+            payment_mode = st.selectbox("Payment Mode", ["Cash", "UPI", "Debit Card"])
             note = st.text_input("Note (Optional)")
         
         submitted = st.form_submit_button("Add Expense")
