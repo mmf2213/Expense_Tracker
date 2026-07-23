@@ -33,7 +33,7 @@ st.session_state.monthly_income = monthly_income
 
 # Category Budget Limits (Added Rent)
 st.sidebar.subheader("🎯 Category Budgets")
-categories = ["Food", "Rent", "Transport", "Shopping", "Bills", "Entertainment", "Other"]
+categories = ["Food", "Rent", "Transport", "Shopping", "Bills"]
 
 if 'category_budgets' not in st.session_state:
     st.session_state.category_budgets = {
