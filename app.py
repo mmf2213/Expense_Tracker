@@ -5,10 +5,12 @@ import database as db
 
 st.set_page_config(page_title="Expense Tracker", page_icon="💰", layout="wide")
 
-st.title("💰 Expense & Wallet Tracker")
+st.title("💰 Personal Expense & Wallet Manager")
 
-# Sidebar: Wallet Overview & Transfers
-st.sidebar.header("💳 Wallets")
+# ==========================================
+# SIDEBAR - WALLETS & ATM TRANSFERS
+# ==========================================
+st.sidebar.header("💳 Wallet Balances")
 wallets = db.get_wallets()
 online_bal = float(wallets.get('online_balance', 0.0))
 offline_bal = float(wallets.get('offline_balance', 0.0))
@@ -18,11 +20,15 @@ st.sidebar.metric("Cash Balance", f"₹{offline_bal:,.2f}")
 st.sidebar.metric("Total Liquidity", f"₹{(online_bal + offline_bal):,.2f}")
 
 st.sidebar.divider()
-st.sidebar.subheader("🔄 Transfer Funds")
-transfer_amt = st.sidebar.number_input("Amount", min_value=1.0, step=10.0, key="trans_amt")
-direction = st.sidebar.selectbox("Direction", ["ONLINE_TO_CASH", "CASH_TO_ONLINE"])
+st.sidebar.subheader("🏧 ATM Transfer / Deposit")
+transfer_amt = st.sidebar.number_input("Transfer Amount (₹)", min_value=1.0, step=10.0, key="trans_amt")
+direction = st.sidebar.selectbox(
+    "Transfer Direction", 
+    ["ONLINE_TO_CASH", "CASH_TO_ONLINE"],
+    format_func=lambda x: "ATM Withdrawal (Online ➔ Cash)" if x == "ONLINE_TO_CASH" else "Cash Deposit (Cash ➔ Online)"
+)
 
-if st.sidebar.button("Transfer"):
+if st.sidebar.button("Execute Transfer"):
     success, msg = db.transfer_funds(transfer_amt, direction)
     if success:
         st.sidebar.success(msg)
@@ -30,21 +36,23 @@ if st.sidebar.button("Transfer"):
     else:
         st.sidebar.error(msg)
 
-# Main Form: Add Transaction
+# ==========================================
+# MAIN PAGE - ADD INCOME OR EXPENSE
+# ==========================================
 st.subheader("➕ Add New Entry")
-col1, col2, col3 = st.columns(3)
 
+col1, col2, col3 = st.columns(3)
 with col1:
     trans_date = st.date_input("Date", datetime.date.today())
-    trans_type = st.selectbox("Type", ["EXPENSE", "INCOME"])
+    trans_type = st.selectbox("Transaction Type", ["EXPENSE", "INCOME"])
 with col2:
-    category = st.text_input("Category", placeholder="Food, Travel, Salary, etc.")
+    category = st.text_input("Category", placeholder="e.g., Salary, Food, Shopping, Rent")
     amount = st.number_input("Amount (₹)", min_value=0.01, step=10.0)
 with col3:
     payment_mode = st.selectbox("Payment Mode", ["UPI", "Debit Card", "Cash", "Online"])
     note = st.text_input("Note", placeholder="Optional description")
 
-if st.button("Save Transaction", type="primary"):
+if st.button("Save Entry", type="primary"):
     if not category:
         st.warning("Please specify a category.")
     else:
@@ -57,26 +65,31 @@ if st.button("Save Transaction", type="primary"):
             trans_type=trans_type
         )
         if res:
-            st.success("Transaction saved!")
+            st.success(f"Recorded {trans_type.lower()} of ₹{amount:,.2f}!")
             st.rerun()
 
 st.divider()
 
-# Ledger Table
+# ==========================================
+# TRANSACTIONS LEDGER & DELETION
+# ==========================================
 st.subheader("📋 Ledger History")
+
 records = db.fetch_expenses()
 
 if records:
     df = pd.DataFrame(records)
-    cols = [c for c in ['id', 'date', 'type', 'category', 'amount', 'payment_mode', 'note'] if c in df.columns]
-    st.dataframe(df[cols], use_container_width=True)
+    
+    # Filter columns cleanly
+    display_cols = [c for c in ['id', 'date', 'type', 'category', 'amount', 'payment_mode', 'note'] if c in df.columns]
+    st.dataframe(df[display_cols], use_container_width=True)
 
-    # Delete Row Section
-    st.subheader("🗑️ Delete Record")
-    del_id = st.number_input("Enter Transaction ID to delete", min_value=1, step=1)
-    if st.button("Delete"):
+    # Delete Action
+    st.subheader("🗑️ Delete Entry")
+    del_id = st.number_input("Enter ID to delete", min_value=1, step=1)
+    if st.button("Delete Row"):
         db.delete_expense(del_id)
         st.success(f"Deleted transaction #{del_id}")
         st.rerun()
 else:
-    st.info("No transactions recorded yet.")
+    st.info("No records logged yet.")
