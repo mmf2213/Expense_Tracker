@@ -4,3 +4,4 @@ matplotlib
 plotly
 openpyxl
 psycopg2-binary
+supabase
