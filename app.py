@@ -23,7 +23,6 @@ st.sidebar.divider()
 
 # ⚙️ SET START-OF-MONTH BALANCES
 with st.sidebar.expander("⚙️ Set Month Starting Balances"):
-    # Using max(0.0, balance) prevents StreamlitValueBelowMinError if current balance is negative
     default_online = max(0.0, online_bal)
     default_cash = max(0.0, offline_bal)
 
@@ -35,6 +34,7 @@ with st.sidebar.expander("⚙️ Set Month Starting Balances"):
         if res:
             st.success("Starting balances updated!")
             st.rerun()
+
 st.sidebar.divider()
 
 # 🏧 ATM TRANSFER / DEPOSIT
@@ -59,32 +59,66 @@ if st.sidebar.button("Execute Transfer"):
 # ==========================================
 st.subheader("➕ Add New Entry")
 
+# Preset Options for Categories and Notes
+CATEGORIES = [
+    "Food & Snacks", 
+    "Groceries & Dmart", 
+    "Bills & Recharge", 
+    "Travel & Auto", 
+    "Shopping", 
+    "Salary / Income", 
+    "Entertainment", 
+    "Health & Medical", 
+    "Other"
+]
+
+NOTE_SUGGESTIONS = [
+    "", 
+    "Recharge", 
+    "Lunch", 
+    "Dinner", 
+    "Nashta", 
+    "Dmart", 
+    "Auto", 
+    "Petrol", 
+    "Tea / Coffee", 
+    "Milk & Eggs", 
+    "Subscription"
+]
+
 col1, col2, col3 = st.columns(3)
+
 with col1:
     trans_date = st.date_input("Date", datetime.date.today())
     trans_type = st.selectbox("Transaction Type", ["EXPENSE", "INCOME"])
+
 with col2:
-    category = st.text_input("Category", placeholder="e.g., Salary, Food, Shopping, Rent")
+    # Category Dropdown
+    category = st.selectbox("Category", CATEGORIES)
     amount = st.number_input("Amount (₹)", min_value=0.01, step=10.0)
+
 with col3:
     payment_mode = st.selectbox("Payment Mode", ["UPI", "Debit Card", "Cash", "Online"])
-    note = st.text_input("Note", placeholder="Optional description")
+    
+    # Note Auto-Suggest Selectbox + Custom Input fallback
+    selected_note = st.selectbox("Note (Type or pick suggestion)", NOTE_SUGGESTIONS, index=0)
+    custom_note = st.text_input("Custom Note (if not in list above)", placeholder="Type custom description...")
+    
+    # Priority given to custom note if typed, otherwise selected suggestion
+    final_note = custom_note.strip() if custom_note.strip() else selected_note
 
 if st.button("Save Entry", type="primary"):
-    if not category:
-        st.warning("Please specify a category.")
-    else:
-        res = db.add_transaction(
-            date=trans_date,
-            category=category,
-            amount=amount,
-            payment_mode=payment_mode,
-            note=note,
-            trans_type=trans_type
-        )
-        if res:
-            st.success(f"Recorded {trans_type.lower()} of ₹{amount:,.2f}!")
-            st.rerun()
+    res = db.add_transaction(
+        date=trans_date,
+        category=category,
+        amount=amount,
+        payment_mode=payment_mode,
+        note=final_note,
+        trans_type=trans_type
+    )
+    if res:
+        st.success(f"Recorded {trans_type.lower()} of ₹{amount:,.2f}!")
+        st.rerun()
 
 st.divider()
 
