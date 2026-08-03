@@ -174,7 +174,7 @@ if st.button("✨ Auto-Process with AI"):
         """
         try:
             response = ai_client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-1.5-flash",
                 contents=ai_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=system_instruction,
