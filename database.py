@@ -1,10 +1,10 @@
 import os
+import streamlit as st
 from supabase import create_client, Client
 
-# Initialize Supabase client
-# Ensure SUPABASE_URL and SUPABASE_KEY are set in your environment or secrets
-url: str = os.environ.get("SUPABASE_URL", "")
-key: str = os.environ.get("SUPABASE_KEY", "")
+# Initialize Supabase client using Streamlit Secrets or Environment Variables
+url: str = st.secrets.get("SUPABASE_URL") or os.environ.get("SUPABASE_URL", "")
+key: str = st.secrets.get("SUPABASE_KEY") or os.environ.get("SUPABASE_KEY", "")
 
 supabase: Client = create_client(url, key)
 
