@@ -8,7 +8,7 @@ st.set_page_config(page_title="Expense Tracker", page_icon="💰", layout="wide"
 st.title("💰 Personal Expense & Wallet Manager")
 
 # ==========================================
-# SIDEBAR - WALLETS & ATM TRANSFERS
+# SIDEBAR - WALLETS, STARTING BALANCES & ATM
 # ==========================================
 st.sidebar.header("💳 Wallet Balances")
 wallets = db.get_wallets()
@@ -20,6 +20,21 @@ st.sidebar.metric("Cash Balance", f"₹{offline_bal:,.2f}")
 st.sidebar.metric("Total Liquidity", f"₹{(online_bal + offline_bal):,.2f}")
 
 st.sidebar.divider()
+
+# ⚙️ SET START-OF-MONTH BALANCES
+with st.sidebar.expander("⚙️ Set Month Starting Balances"):
+    new_online = st.number_input("Starting Online Balance (₹)", min_value=0.0, value=online_bal, step=100.0)
+    new_cash = st.number_input("Starting Cash Balance (₹)", min_value=0.0, value=offline_bal, step=100.0)
+    
+    if st.button("Set Initial Balances", type="primary"):
+        res = db.set_starting_balances(new_online, new_cash)
+        if res:
+            st.success("Starting balances updated!")
+            st.rerun()
+
+st.sidebar.divider()
+
+# 🏧 ATM TRANSFER / DEPOSIT
 st.sidebar.subheader("🏧 ATM Transfer / Deposit")
 transfer_amt = st.sidebar.number_input("Transfer Amount (₹)", min_value=1.0, step=10.0, key="trans_amt")
 direction = st.sidebar.selectbox(
