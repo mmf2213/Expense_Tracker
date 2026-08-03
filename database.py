@@ -14,41 +14,54 @@ supabase: Client = create_client(url, key)
 
 def fetch_expenses():
     """Fetches all transactions (Expenses and Incomes) from Supabase."""
-    response = supabase.table("expenses").select("*").order("date", desc=True).execute()
-    return response.data
+    try:
+        response = supabase.table("expenses").select("*").order("date", desc=True).execute()
+        return response.data or []
+    except Exception as e:
+        print(f"Error fetching expenses: {e}")
+        return []
 
 def add_transaction(date, category, amount, payment_mode, note="", trans_type="EXPENSE"):
     """
     Adds a new transaction (EXPENSE or INCOME) and automatically updates wallet balance.
     """
+    date_str = str(date)
+    amount_val = float(amount)
+    
     data = {
-        "date": str(date),
+        "date": date_str,
         "category": category,
-        "amount": float(amount),
+        "amount": amount_val,
         "payment_mode": payment_mode,
-        "note": note,
+        "note": note or "",
         "type": trans_type
     }
-    supabase.table("expenses").insert(data).execute()
     
+    # Insert row into expenses table
+    response = supabase.table("expenses").insert(data).execute()
+
     # Automatically update corresponding wallet balance
     is_online = payment_mode in ["UPI", "Debit Card", "Online"]
     wallets = get_wallets()
-    
+    current_online = float(wallets.get('online_balance', 0.0))
+    current_offline = float(wallets.get('offline_balance', 0.0))
+
     if trans_type == "EXPENSE":
         if is_online:
-            update_wallets(wallets['online_balance'] - float(amount), wallets['offline_balance'])
+            update_wallets(current_online - amount_val, current_offline)
         else:
-            update_wallets(wallets['online_balance'], wallets['offline_balance'] - float(amount))
+            update_wallets(current_online, current_offline - amount_val)
     elif trans_type == "INCOME":
         if is_online:
-            update_wallets(wallets['online_balance'] + float(amount), wallets['offline_balance'])
+            update_wallets(current_online + amount_val, current_offline)
         else:
-            update_wallets(wallets['online_balance'], wallets['offline_balance'] + float(amount))
+            update_wallets(current_online, current_offline + amount_val)
+            
+    return response
 
 def delete_expense(expense_id):
     """Deletes a transaction by ID."""
-    supabase.table("expenses").delete().eq("id", expense_id).execute()
+    return supabase.table("expenses").delete().eq("id", expense_id).execute()
 
 # ==========================================
 # 2. WALLET MANAGEMENT
@@ -56,14 +69,18 @@ def delete_expense(expense_id):
 
 def get_wallets():
     """Fetches current Online and Offline cash balances."""
-    response = supabase.table("wallets").select("*").eq("id", 1).execute()
-    if response.data:
-        return response.data[0]
-    return {"online_balance": 0.0, "offline_balance": 0.0}
+    try:
+        response = supabase.table("wallets").select("*").eq("id", 1).execute()
+        if response.data and len(response.data) > 0:
+            return response.data[0]
+    except Exception as e:
+        print(f"Error fetching wallets: {e}")
+        
+    return {"id": 1, "online_balance": 0.0, "offline_balance": 0.0}
 
 def update_wallets(online_balance, offline_balance):
     """Updates Online and Offline cash balances directly."""
-    supabase.table("wallets").update({
+    return supabase.table("wallets").update({
         "online_balance": float(online_balance),
         "offline_balance": float(offline_balance)
     }).eq("id", 1).execute()
@@ -74,17 +91,17 @@ def transfer_funds(amount, direction="ONLINE_TO_CASH"):
     Does not log as an expense.
     """
     wallets = get_wallets()
-    online = float(wallets['online_balance'])
-    offline = float(wallets['offline_balance'])
+    online = float(wallets.get('online_balance', 0.0))
+    offline = float(wallets.get('offline_balance', 0.0))
     amt = float(amount)
 
     if direction == "ONLINE_TO_CASH":
         if online >= amt:
             update_wallets(online - amt, offline + amt)
-            return True, "Transferred ₹{:,.2f} from Online to Cash!".format(amt)
+            return True, f"Transferred ₹{amt:,.2f} from Online to Cash!"
         return False, "Insufficient Online Balance!"
-    else: # CASH_TO_ONLINE
+    else:  # CASH_TO_ONLINE
         if offline >= amt:
             update_wallets(online + amt, offline - amt)
-            return True, "Transferred ₹{:,.2f} from Cash to Online!".format(amt)
+            return True, f"Transferred ₹{amt:,.2f} from Cash to Online!"
         return False, "Insufficient Cash Balance!"
