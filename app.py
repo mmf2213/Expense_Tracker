@@ -23,15 +23,18 @@ st.sidebar.divider()
 
 # ⚙️ SET START-OF-MONTH BALANCES
 with st.sidebar.expander("⚙️ Set Month Starting Balances"):
-    new_online = st.number_input("Starting Online Balance (₹)", min_value=0.0, value=online_bal, step=100.0)
-    new_cash = st.number_input("Starting Cash Balance (₹)", min_value=0.0, value=offline_bal, step=100.0)
+    # Using max(0.0, balance) prevents StreamlitValueBelowMinError if current balance is negative
+    default_online = max(0.0, online_bal)
+    default_cash = max(0.0, offline_bal)
+
+    new_online = st.number_input("Starting Online Balance (₹)", value=default_online, step=100.0)
+    new_cash = st.number_input("Starting Cash Balance (₹)", value=default_cash, step=100.0)
     
     if st.button("Set Initial Balances", type="primary"):
         res = db.set_starting_balances(new_online, new_cash)
         if res:
             st.success("Starting balances updated!")
             st.rerun()
-
 st.sidebar.divider()
 
 # 🏧 ATM TRANSFER / DEPOSIT
