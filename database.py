@@ -2,7 +2,7 @@ import os
 import streamlit as st
 from supabase import create_client, Client
 
-# Initialize Supabase client
+# Initialize Supabase client using Streamlit Secrets or Environment Variables
 url: str = st.secrets.get("SUPABASE_URL") or os.environ.get("SUPABASE_URL", "")
 key: str = st.secrets.get("SUPABASE_KEY") or os.environ.get("SUPABASE_KEY", "")
 
@@ -94,6 +94,14 @@ def update_wallets(online_balance, offline_balance):
         }).eq("id", 1).execute()
     except Exception as e:
         st.error(f"Error updating wallets: {e}")
+        return None
+
+def set_starting_balances(online_amount, cash_amount):
+    """Sets/overwrites initial starting balances for Online and Cash wallets."""
+    try:
+        return update_wallets(online_amount, cash_amount)
+    except Exception as e:
+        st.error(f"Error setting starting balances: {e}")
         return None
 
 def transfer_funds(amount, direction="ONLINE_TO_CASH"):
