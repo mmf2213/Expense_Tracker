@@ -59,7 +59,6 @@ if st.sidebar.button("Execute Transfer"):
 # ==========================================
 st.subheader("➕ Add New Entry")
 
-# Preset Options for Categories and Notes
 CATEGORIES = [
     "Food & Snacks", 
     "Groceries & Dmart", 
@@ -72,8 +71,8 @@ CATEGORIES = [
     "Other"
 ]
 
+# Note Preset List (Type or Select)
 NOTE_SUGGESTIONS = [
-    "", 
     "Recharge", 
     "Lunch", 
     "Dinner", 
@@ -83,7 +82,8 @@ NOTE_SUGGESTIONS = [
     "Petrol", 
     "Tea / Coffee", 
     "Milk & Eggs", 
-    "Subscription"
+    "Subscription",
+    "General / None"
 ]
 
 col1, col2, col3 = st.columns(3)
@@ -93,19 +93,12 @@ with col1:
     trans_type = st.selectbox("Transaction Type", ["EXPENSE", "INCOME"])
 
 with col2:
-    # Category Dropdown
     category = st.selectbox("Category", CATEGORIES)
     amount = st.number_input("Amount (₹)", min_value=0.01, step=10.0)
 
 with col3:
     payment_mode = st.selectbox("Payment Mode", ["UPI", "Debit Card", "Cash", "Online"])
-    
-    # Note Auto-Suggest Selectbox + Custom Input fallback
-    selected_note = st.selectbox("Note (Type or pick suggestion)", NOTE_SUGGESTIONS, index=0)
-    custom_note = st.text_input("Custom Note (if not in list above)", placeholder="Type custom description...")
-    
-    # Priority given to custom note if typed, otherwise selected suggestion
-    final_note = custom_note.strip() if custom_note.strip() else selected_note
+    note = st.selectbox("Note", NOTE_SUGGESTIONS)
 
 if st.button("Save Entry", type="primary"):
     res = db.add_transaction(
@@ -113,7 +106,7 @@ if st.button("Save Entry", type="primary"):
         category=category,
         amount=amount,
         payment_mode=payment_mode,
-        note=final_note,
+        note=note,
         trans_type=trans_type
     )
     if res:
