@@ -203,8 +203,7 @@ if st.button("✨ Auto-Process with AI"):
                 )
                 st.success(f"🤖 AI Action Executed: Recorded {parsed.get('trans_type')} of ₹{parsed.get('amount')} under {parsed.get('category')}!")
                 st.rerun()
-                
-        # Place the custom exception handler here:
+
         except Exception as e:
             err_msg = str(e)
             if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
