@@ -71,21 +71,6 @@ CATEGORIES = [
     "Other"
 ]
 
-# Note Preset List (Type or Select)
-NOTE_SUGGESTIONS = [
-    "Recharge", 
-    "Lunch", 
-    "Dinner", 
-    "Nashta", 
-    "Dmart", 
-    "Auto", 
-    "Petrol", 
-    "Tea / Coffee", 
-    "Milk & Eggs", 
-    "Subscription",
-    "General / None"
-]
-
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -98,7 +83,7 @@ with col2:
 
 with col3:
     payment_mode = st.selectbox("Payment Mode", ["UPI", "Debit Card", "Cash", "Online"])
-    note = st.selectbox("Note", NOTE_SUGGESTIONS)
+    note = st.text_input("Note", placeholder="e.g., Lunch, Recharge, Dmart, etc.")
 
 if st.button("Save Entry", type="primary"):
     res = db.add_transaction(
