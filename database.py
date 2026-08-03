@@ -18,7 +18,7 @@ def fetch_expenses():
         response = supabase.table("expenses").select("*").order("date", desc=True).execute()
         return response.data or []
     except Exception as e:
-        print(f"Error fetching expenses: {e}")
+        st.error(f"Error fetching expenses: {e}")
         return []
 
 def add_transaction(date, category, amount, payment_mode, note="", trans_type="EXPENSE"):
@@ -37,8 +37,11 @@ def add_transaction(date, category, amount, payment_mode, note="", trans_type="E
         "type": trans_type
     }
     
-    # Insert row into expenses table
-    response = supabase.table("expenses").insert(data).execute()
+    try:
+        response = supabase.table("expenses").insert(data).execute()
+    except Exception as e:
+        st.error(f"Supabase Database Error: {e}")
+        return None
 
     # Automatically update corresponding wallet balance
     is_online = payment_mode in ["UPI", "Debit Card", "Online"]
@@ -61,7 +64,11 @@ def add_transaction(date, category, amount, payment_mode, note="", trans_type="E
 
 def delete_expense(expense_id):
     """Deletes a transaction by ID."""
-    return supabase.table("expenses").delete().eq("id", expense_id).execute()
+    try:
+        return supabase.table("expenses").delete().eq("id", expense_id).execute()
+    except Exception as e:
+        st.error(f"Error deleting expense: {e}")
+        return None
 
 # ==========================================
 # 2. WALLET MANAGEMENT
@@ -74,16 +81,20 @@ def get_wallets():
         if response.data and len(response.data) > 0:
             return response.data[0]
     except Exception as e:
-        print(f"Error fetching wallets: {e}")
+        st.error(f"Error fetching wallets: {e}")
         
     return {"id": 1, "online_balance": 0.0, "offline_balance": 0.0}
 
 def update_wallets(online_balance, offline_balance):
     """Updates Online and Offline cash balances directly."""
-    return supabase.table("wallets").update({
-        "online_balance": float(online_balance),
-        "offline_balance": float(offline_balance)
-    }).eq("id", 1).execute()
+    try:
+        return supabase.table("wallets").update({
+            "online_balance": float(online_balance),
+            "offline_balance": float(offline_balance)
+        }).eq("id", 1).execute()
+    except Exception as e:
+        st.error(f"Error updating wallets: {e}")
+        return None
 
 def transfer_funds(amount, direction="ONLINE_TO_CASH"):
     """
